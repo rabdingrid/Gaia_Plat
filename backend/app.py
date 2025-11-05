@@ -27,4 +27,4 @@ if __name__ == '__main__':
     print(f"Access the API at http://localhost:{PORT}")
     print(f"API documentation available at http://localhost:{PORT}/docs")
     
-    uvicorn.run(app, host=HOST, port=PORT, reload=DEBUG)
+    uvicorn.run("app:app", host=HOST, port=PORT, reload=DEBUG)
