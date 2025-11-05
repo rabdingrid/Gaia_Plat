@@ -1,0 +1,10 @@
+[service]
+name = "frontend"
+start = "npm run start"
+build = "npm install --no-audit --no-fund && npm run build"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
