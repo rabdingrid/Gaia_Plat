@@ -2,8 +2,12 @@
 Authentication API routes for Google OAuth SSO.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from typing import Optional
+import json
+import base64
+from urllib.parse import urlencode
 from core.database import get_db
 from services.auth_service import AuthService
 from schemas.auth import (
@@ -47,6 +51,7 @@ async def google_callback(
     """
     Google OAuth callback endpoint.
     Exchanges authorization code for token and authenticates user.
+    Then redirects to frontend with auth result.
     
     Args:
         code: Authorization code from Google OAuth (required if no error)
@@ -55,42 +60,72 @@ async def google_callback(
         db: Database session
         
     Returns:
-        AuthResponse with redirect URL or error
+        RedirectResponse to frontend callback page with auth data
     """
+    # Get frontend URL from settings
+    frontend_url = settings.FRONTEND_URL
+    
+    # Remove trailing slash if present
+    if frontend_url and frontend_url.endswith('/'):
+        frontend_url = frontend_url.rstrip('/')
+    
+    # Validate FRONTEND_URL is set
+    if not frontend_url or frontend_url.strip() == '':
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error("FRONTEND_URL is not set! Cannot redirect to frontend.")
+        # Return error as JSON since we can't redirect
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Configuration error: FRONTEND_URL is not set. Please configure FRONTEND_URL environment variable."
+        )
+    
+    callback_url = f"{frontend_url}/auth/callback"
+    
+    # Debug logging
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"OAuth callback received - code: {code is not None}, error: {error}, state: {state}")
+    logger.info(f"Frontend URL: {frontend_url}, Callback URL: {callback_url}")
+    
     # Handle OAuth errors from Google
     if error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Google OAuth error: {error}"
-        )
+        error_params = urlencode({
+            'error': error,
+            'state': state or ''
+        })
+        return RedirectResponse(url=f"{callback_url}?{error_params}", status_code=302)
     
     # Check if code is provided
     if not code:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing authorization code. Please try logging in again."
-        )
+        error_params = urlencode({
+            'error': 'Missing authorization code. Please try logging in again.',
+            'state': state or ''
+        })
+        return RedirectResponse(url=f"{callback_url}?{error_params}", status_code=302)
     
     # Exchange code for token
     try:
         id_token_str = google_oauth.get_google_token_from_code(code)
     except ValueError as e:
-        # Handle specific error messages from token exchange
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        error_params = urlencode({
+            'error': str(e),
+            'state': state or ''
+        })
+        return RedirectResponse(url=f"{callback_url}?{error_params}", status_code=302)
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Unexpected error during token exchange: {str(e)}"
-        )
+        error_params = urlencode({
+            'error': f"Unexpected error during token exchange: {str(e)}",
+            'state': state or ''
+        })
+        return RedirectResponse(url=f"{callback_url}?{error_params}", status_code=302)
     
     if not id_token_str:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to exchange authorization code for token. No ID token received."
-        )
+        error_params = urlencode({
+            'error': 'Failed to exchange authorization code for token. No ID token received.',
+            'state': state or ''
+        })
+        return RedirectResponse(url=f"{callback_url}?{error_params}", status_code=302)
     
     # Authenticate user
     auth_service = AuthService(db)
@@ -99,16 +134,76 @@ async def google_callback(
     if not response.success:
         # Special handling for ongoing status (multiple login)
         if response.status == CandidateStatus.ONGOING:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=response.message
-            )
+            error_params = urlencode({
+                'error': response.message,
+                'error_code': 'ONGOING',
+                'state': state or ''
+            })
+            return RedirectResponse(url=f"{callback_url}?{error_params}", status_code=302)
+        
+        error_params = urlencode({
+            'error': response.message,
+            'state': state or ''
+        })
+        return RedirectResponse(url=f"{callback_url}?{error_params}", status_code=302)
+    
+    # Encode auth response as base64 JSON for URL parameter
+    auth_data = {
+        'success': response.success,
+        'message': response.message,
+        'user_type': response.user_type.value if response.user_type else None,
+        'email': response.email,
+        'name': response.name,
+        'status': response.status.value if response.status else None,
+        'candidate_id': response.candidate_id,
+        'redirect_url': response.redirect_url
+    }
+    
+    # Encode auth data
+    auth_json = json.dumps(auth_data)
+    auth_encoded = base64.urlsafe_b64encode(auth_json.encode()).decode()
+    
+    # Redirect to frontend with auth data
+    redirect_params = urlencode({
+        'auth': auth_encoded,
+        'state': state or ''
+    })
+    
+    redirect_url = f"{callback_url}?{redirect_params}"
+    
+    # Debug logging
+    logger.info(f"Redirecting to frontend: {redirect_url}")
+    logger.info(f"FRONTEND_URL from settings: {settings.FRONTEND_URL}")
+    logger.info(f"Auth data: {auth_data}")
+    
+    # Ensure redirect URL is valid
+    if not redirect_url.startswith('http://') and not redirect_url.startswith('https://'):
+        logger.error(f"Invalid redirect URL (not absolute): {redirect_url}")
+        logger.error(f"FRONTEND_URL value: {settings.FRONTEND_URL}")
+        # If FRONTEND_URL is not set correctly, we can't redirect, so return error
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=response.message
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "Configuration error: Invalid redirect URL. FRONTEND_URL may not be set correctly.",
+                "frontend_url": settings.FRONTEND_URL,
+                "redirect_url": redirect_url,
+                "auth_data": auth_data  # Include auth data in error for debugging
+            }
         )
     
-    return response
+    # CRITICAL: Use status_code 302 (Found) for redirect
+    # FastAPI RedirectResponse automatically sets Location header
+    # Make sure we're returning RedirectResponse, not JSON
+    redirect_response = RedirectResponse(url=redirect_url, status_code=302)
+    
+    # Set headers explicitly to ensure redirect works
+    redirect_response.headers["Location"] = redirect_url
+    
+    logger.info(f"Created RedirectResponse with status {redirect_response.status_code}")
+    logger.info(f"RedirectResponse Location header: {redirect_response.headers.get('Location')}")
+    
+    # IMPORTANT: Return RedirectResponse, not the auth_data dict
+    return redirect_response
 
 
 @router.post("/admin/login", response_model=AuthResponse)

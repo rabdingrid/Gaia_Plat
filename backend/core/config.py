@@ -12,25 +12,30 @@ class Settings:
     """Application settings loaded from environment variables."""
     
     # Server Configuration
-    PORT: int = int(os.getenv('PORT'))
-    HOST: str = os.getenv('HOST')
-    DEBUG: bool = os.getenv('DEBUG').lower() == 'true'
+    PORT: int = int(os.getenv('PORT', '5000'))
+    HOST: str = os.getenv('HOST', '0.0.0.0')
+    DEBUG: bool = os.getenv('DEBUG', 'True').lower() == 'true'
     
     # Database Configuration
-    DATABASE_URL: str = os.getenv('DATABASE_URL')
+    DATABASE_URL: str = os.getenv('DATABASE_URL', '')
     
     # Backend URL Configuration (for OAuth redirect)
     # Use this to configure the backend URL for local or develop environment
     # Examples: http://localhost:5000 or https://api-dev.yourdomain.com
-    BACKEND_URL: str = os.getenv('BACKEND_URL')
+    BACKEND_URL: str = os.getenv('BACKEND_URL', 'http://localhost:5000')
+    
+    # Frontend URL Configuration (for OAuth redirect)
+    # Use this to configure the frontend URL for redirecting after authentication
+    # Examples: http://localhost:5175 or https://yourdomain.com
+    FRONTEND_URL: str = os.getenv('FRONTEND_URL', 'http://localhost:5175')
     
     # Google OAuth Configuration
-    GOOGLE_CLIENT_ID: str = os.getenv('GOOGLE_CLIENT_ID')
-    GOOGLE_CLIENT_SECRET: str = os.getenv('GOOGLE_CLIENT_SECRET')
-    GOOGLE_REDIRECT_URI: str = os.getenv('GOOGLE_REDIRECT_URI')
+    GOOGLE_CLIENT_ID: str = os.getenv('GOOGLE_CLIENT_ID', '')
+    GOOGLE_CLIENT_SECRET: str = os.getenv('GOOGLE_CLIENT_SECRET', '')
+    GOOGLE_REDIRECT_URI: str = os.getenv('GOOGLE_REDIRECT_URI', '')
     
     # Company Domain
-    COMPANY_DOMAIN: str = os.getenv('COMPANY_DOMAIN')
+    COMPANY_DOMAIN: str = os.getenv('COMPANY_DOMAIN', '')
     
     # Google OAuth Scopes
     GOOGLE_SCOPES: list = [

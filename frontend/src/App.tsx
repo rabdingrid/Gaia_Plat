@@ -1,35 +1,104 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import HomePage from './app/HomePage';
+import MCQPage from './app/Candidate/MCQPage';
+import CodingTestPage from './app/Candidate/CodingTestPage';
+import SystemDesignPage from './app/Candidate/SystemDesignPage';
+import TourMCQPage from './app/tour/TourMCQPage';
+import TourCodingPage from './app/tour/TourCodingPage';
+import TourSystemDesignPage from './app/tour/TourSystemDesignPage';
+import LoginPage from './app/Auth/LoginPage';
+import CallbackPage from './app/Auth/CallbackPage';
+import Admin from './pages/Admin';
+import Recruiter from './pages/Recruiter';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Protected Route Component
+const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
+  const { isAuthenticated } = useAuth();
+  const userData = localStorage.getItem('user_data');
 
+  // Check if user is authenticated or has stored user data
+  const isAuth = isAuthenticated || (userData !== null);
+
+  if (!isAuth) {
+    return <Navigate to="/auth/login" replace />;
+  }
+
+  return children;
+};
+
+// Root route handler - redirects to login if not authenticated, otherwise based on user type
+const RootRoute = () => {
+  const { isAuthenticated, user } = useAuth();
+  const userData = localStorage.getItem('user_data');
+  const isAuth = isAuthenticated || (userData !== null);
+
+  if (isAuth) {
+    // Get user type from context or localStorage
+    let userType: string | undefined;
+    if (user?.userType) {
+      userType = user.userType;
+    } else if (userData) {
+      try {
+        const parsed = JSON.parse(userData);
+        userType = parsed.userType;
+      } catch {
+        // Fallback to home if parsing fails
+      }
+    }
+
+    // Redirect based on user type
+    if (userType === 'admin') {
+      return <Navigate to="/admin" replace />;
+    }
+    if (userType === 'recruiter') {
+      return <Navigate to="/recruiter" replace />;
+    }
+    // Default to home for candidates or unknown types
+    return <Navigate to="/home" replace />;
+  }
+
+  return <Navigate to="/auth/login" replace />;
+};
+
+function AppRoutes() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Routes>
+      {/* Auth Routes */}
+      <Route path="/auth/login" element={<LoginPage />} />
+      <Route path="/auth/callback" element={<CallbackPage />} />
+      
+      {/* Root route - redirects based on auth status */}
+      <Route path="/" element={<RootRoute />} />
+      
+      {/* Protected Routes - require authentication */}
+      <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+      <Route path="/recruiter" element={<ProtectedRoute><Recruiter /></ProtectedRoute>} />
+      
+      {/* Tutorial/Mock Test Pages */}
+      <Route path="/tutorial/mcq" element={<TourMCQPage />} />
+      <Route path="/tutorial/coding" element={<TourCodingPage />} />
+      <Route path="/tutorial/system-design" element={<TourSystemDesignPage />} />
+      
+      {/* Original Test Pages */}
+      <Route path="/candidate/mcq" element={<ProtectedRoute><MCQPage /></ProtectedRoute>} />
+      <Route path="/candidate/coding" element={<ProtectedRoute><CodingTestPage /></ProtectedRoute>} />
+      <Route path="/candidate/system-design" element={<ProtectedRoute><SystemDesignPage /></ProtectedRoute>} />
+      
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+export default App;

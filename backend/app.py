@@ -38,6 +38,33 @@ def health():
     """Health check endpoint."""
     return {"status": "healthy", "message": "Backend is running"}
 
+@app.get('/config/check')
+def check_config():
+    """
+    Check configuration values (for debugging).
+    This endpoint helps verify that environment variables are set correctly.
+    """
+    from core.config import settings
+    
+    # Check if FRONTEND_URL is set
+    frontend_url_set = bool(settings.FRONTEND_URL and settings.FRONTEND_URL.strip())
+    frontend_url_valid = (
+        frontend_url_set and 
+        (settings.FRONTEND_URL.startswith('http://') or settings.FRONTEND_URL.startswith('https://'))
+    )
+    
+    return {
+        "frontend_url": settings.FRONTEND_URL if frontend_url_set else "NOT SET",
+        "frontend_url_set": frontend_url_set,
+        "frontend_url_valid": frontend_url_valid,
+        "frontend_callback_url": f"{settings.FRONTEND_URL}/auth/callback" if frontend_url_set else "N/A",
+        "backend_url": settings.BACKEND_URL,
+        "configuration_status": {
+            "frontend_url_ok": frontend_url_valid,
+            "overall_ok": frontend_url_valid
+        }
+    }
+
 if __name__ == '__main__':
     print(f"Backend is running on port {settings.PORT}")
     print(f"Access the API at http://localhost:{settings.PORT}")
