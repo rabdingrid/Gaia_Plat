@@ -1,4 +1,10 @@
 .env
 venv
-__pycache__
-__pycache__/*
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.sqlite
+*.sqlite3
+test_*.db
+*.log
