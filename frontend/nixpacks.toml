@@ -1,0 +1,9 @@
+[phases.install]
+cmd = "npm ci --legacy-peer-deps"
+
+[phases.build]
+cmd = "npm run build"
+
+[start]
+
+cmd = "npx serve -s dist"
