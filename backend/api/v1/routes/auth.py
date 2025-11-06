@@ -156,8 +156,11 @@ async def google_callback(
         'name': response.name,
         'status': response.status.value if response.status else None,
         'candidate_id': response.candidate_id,
-        'redirect_url': response.redirect_url
     }
+    
+    # Add redirect_url only if it exists in the response
+    if hasattr(response, 'redirect_url') and response.redirect_url:
+        auth_data['redirect_url'] = response.redirect_url
     
     # Encode auth data
     auth_json = json.dumps(auth_data)
