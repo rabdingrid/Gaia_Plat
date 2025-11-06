@@ -1,4 +1,3 @@
-import React from 'react'
 import HomePage from './app/HomePage'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import TourMCQPage from './app/tour/TourMCQPage'
