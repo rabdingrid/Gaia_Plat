@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
 const TestCompletedPage = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   // Prevent back navigation
   useEffect(() => {

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+// import { useNavigate } from 'react-router-dom';
 import { CodingProvider, useCoding } from '../../context/CodingContext';
 import LanguageTabs from '../../components/CodeEditor/LanguageTabs';
 import EditorHeader from '../../components/CodeEditor/EditorHeader';
@@ -14,7 +14,7 @@ import FullscreenViolationModal from '../../components/FullscreenViolationModal'
 const CodingTestPageContent = () => {
   const { formatTime, timeRemaining, getProgressPercentage, isLoading, currentProblem } = useCoding();
   const { goToProblem, currentProblemIndex, totalProblems } = useCodingSession();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'testcases' | 'output'>('testcases');
   const [_showSubmitModal, setShowSubmitModal] = useState(false);
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { MCQProvider, useMCQ } from '../../context/MCQContext';
 import ProgressSidebar from '../../components/MCQ/ProgressSidebar';
 import QuestionCard from '../../components/MCQ/QuestionCard';
@@ -10,7 +10,7 @@ import FullscreenViolationModal from '../../components/FullscreenViolationModal'
 
 const MCQPageContent = () => {
   const { formatTime, timeRemaining, getProgressPercentage, isLoading, answers } = useMCQ();
-  const navigate = useNavigate();
+//   const navigate = useNavigate();
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
 
