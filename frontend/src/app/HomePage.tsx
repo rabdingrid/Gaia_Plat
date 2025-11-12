@@ -90,7 +90,7 @@ const HomePage = () => {
 
         <div className="text-center pt-6 border-t border-gray-200">
           <p className="text-sm text-gray-500">
-            Complete all tutorials to understand the assessment format before starting
+            Complete all tutorials to understand the test format before starting
           </p>
         </div>
         </div>
