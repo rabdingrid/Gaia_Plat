@@ -12,15 +12,28 @@ const ProgressSidebar = () => {
     let className = 'aspect-square rounded-lg border-2 font-semibold text-base cursor-pointer flex items-center justify-center relative transition-all hover:scale-105';
     
     if (isActive) {
-      className += ' border-black border-[3px] bg-yellow-100';
+      // Active question gets brown border
+      className += ' border-amber-700 border-[3px]';
     }
     
     if (status === QUESTION_STATUS.ANSWERED) {
-      className += ' bg-green-100 border-green-500 text-green-600';
+      if (isActive) {
+        className += ' bg-green-100 text-green-600';
+      } else {
+        className += ' bg-green-100 border-green-500 text-green-600';
+      }
     } else if (status === QUESTION_STATUS.MARKED) {
-      className += ' bg-purple-600 border-purple-600 text-white';
+      if (isActive) {
+        className += ' bg-purple-600 text-white';
+      } else {
+        className += ' bg-purple-600 border-purple-600 text-white';
+      }
     } else {
-      className += ' bg-yellow-100 border-yellow-400 text-gray-800';
+      if (isActive) {
+        className += ' bg-yellow-100 text-gray-800';
+      } else {
+        className += ' bg-yellow-100 border-yellow-400 text-gray-800';
+      }
     }
     
     return className;
@@ -42,9 +55,6 @@ const ProgressSidebar = () => {
               className={getQuestionButtonClass(index, question.id)}
               onClick={() => goToQuestion(index)}
             >
-              {questionStatuses[question.id] === QUESTION_STATUS.MARKED && (
-                <span className="absolute text-xs">🚩</span>
-              )}
               <span>{index + 1}</span>
             </button>
           ))}

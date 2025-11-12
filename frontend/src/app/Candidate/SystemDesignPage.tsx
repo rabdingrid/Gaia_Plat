@@ -1,11 +1,25 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SystemDesignProvider, useSystemDesign } from '../../context/SystemDesignContext';
 import DesignHeader from '../../components/SystemDesign/DesignHeader';
 import ExcalidrawCanvas from '../../components/SystemDesign/ExcalidrawCanvas';
 import ClarifyingChat from '../../components/SystemDesign/ClarifyingChat';
 import SubmitBar from '../../components/SystemDesign/SubmitBar';
+import { useFullscreenWarning } from '../../hooks/useFullscreenWarning';
+import FullscreenWarningModal from '../../components/FullscreenWarningModal';
+import FullscreenViolationModal from '../../components/FullscreenViolationModal';
 
 const SystemDesignPageContent = () => {
   const { problem, isLoading } = useSystemDesign();
+  const navigate = useNavigate();
+
+  // Monitor fullscreen exit with warning system
+  const { attemptsRemaining, showWarning, showViolation, closeWarning, handleRedirect } = useFullscreenWarning({
+    maxAttempts: 2,
+    onFinalAttempt: () => {
+      // This will be called on the 3rd attempt (final)
+    },
+  });
 
   if (isLoading) {
     return (
@@ -61,6 +75,19 @@ const SystemDesignPageContent = () => {
           <ClarifyingChat />
         </div>
       </div>
+
+      {/* Fullscreen Warning Modal */}
+      <FullscreenWarningModal
+        isOpen={showWarning}
+        attemptsRemaining={attemptsRemaining}
+        onClose={closeWarning}
+      />
+
+      {/* Fullscreen Violation Modal */}
+      <FullscreenViolationModal
+        isOpen={showViolation}
+        onRedirect={handleRedirect}
+      />
     </div>
   );
 };

@@ -1,8 +1,24 @@
+import { useAuth } from '../context/AuthContext';
+import Header from '../components/Header';
 
 const Recruiter = () => {
-  return (
-    <div>Recruiter</div>
-  )
-}
+  const { user, logout } = useAuth();
 
-export default Recruiter
+  const handleLogout = () => {
+    logout();
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Header showUserInfo={true} showLogout={true} user={user} onLogout={handleLogout} />
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Recruiter Dashboard</h1>
+          <p className="text-gray-600">Recruiter content goes here</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Recruiter;

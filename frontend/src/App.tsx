@@ -11,6 +11,10 @@ import LoginPage from './app/Auth/LoginPage';
 import CallbackPage from './app/Auth/CallbackPage';
 import Admin from './pages/Admin';
 import Recruiter from './pages/Recruiter';
+import TestScheduledPage from './app/Candidate/TestScheduledPage';
+import TestPermissionsPage from './app/Candidate/TestPermissionsPage';
+import TestOverviewPage from './app/Candidate/TestOverviewPage';
+import TestCompletedPage from './app/Candidate/TestCompletedPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
@@ -54,8 +58,8 @@ const RootRoute = () => {
     if (userType === 'recruiter') {
       return <Navigate to="/recruiter" replace />;
     }
-    // Default to home for candidates or unknown types
-    return <Navigate to="/home" replace />;
+    // Default to test/scheduled for candidates or unknown types
+    return <Navigate to="/test/scheduled" replace />;
   }
 
   return <Navigate to="/auth/login" replace />;
@@ -75,6 +79,10 @@ function AppRoutes() {
       <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
       <Route path="/recruiter" element={<ProtectedRoute><Recruiter /></ProtectedRoute>} />
+      <Route path="/test/scheduled" element={<ProtectedRoute><TestScheduledPage /></ProtectedRoute>} />
+      <Route path="/test/permissions" element={<ProtectedRoute><TestPermissionsPage /></ProtectedRoute>} />
+      <Route path="/test-overview" element={<ProtectedRoute><TestOverviewPage /></ProtectedRoute>} />
+      <Route path="/test/completed" element={<ProtectedRoute><TestCompletedPage /></ProtectedRoute>} />
       
       {/* Tutorial/Mock Test Pages */}
       <Route path="/tutorial/mcq" element={<TourMCQPage />} />

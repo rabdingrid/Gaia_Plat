@@ -11,6 +11,7 @@ export interface MCQContextType {
   currentQuestionIndex: number;
   currentQuestion: Question | undefined;
   answers: Record<number, number>;
+  savedAnswers: Record<number, number>;
   questionStatuses: Record<number, string>;
   timeRemaining: number;
   isLoading: boolean;
@@ -21,6 +22,8 @@ export interface MCQContextType {
   goToNext: () => void;
   goToPrevious: () => void;
   saveAndNext: () => void;
+  goToNextOnly: () => void;
+  hasUnsavedChanges: () => boolean;
   getStatusCounts: () => Record<string, number>;
   getProgressPercentage: () => number;
   formatTime: (seconds: number) => string;

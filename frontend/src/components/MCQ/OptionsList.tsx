@@ -1,11 +1,14 @@
 import { useMCQ } from '../../context/MCQContext';
 
 const OptionsList = () => {
-  const { currentQuestion, answers, selectAnswer } = useMCQ();
+  const { currentQuestion, answers, savedAnswers, selectAnswer } = useMCQ();
 
   if (!currentQuestion) return null;
 
-  const selectedAnswer = answers[currentQuestion.id];
+  // Show selected answer if available, otherwise show saved answer
+  const selectedAnswer = answers[currentQuestion.id] !== undefined 
+    ? answers[currentQuestion.id] 
+    : savedAnswers[currentQuestion.id];
 
   const handleOptionClick = (optionIndex: number) => {
     selectAnswer(currentQuestion.id, optionIndex);

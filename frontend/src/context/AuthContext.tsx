@@ -55,6 +55,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem('oauth_state');
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_data');
+    // Redirect to login page after logout
+    window.location.href = '/auth/login';
   }, []);
 
   const clearError = useCallback(() => {

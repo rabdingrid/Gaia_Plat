@@ -14,6 +14,7 @@ export const MCQProvider = ({ children }: MCQProviderProps) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [savedAnswers, setSavedAnswers] = useState<Record<number, number>>({});
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, string>>({});
   const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +40,19 @@ export const MCQProvider = ({ children }: MCQProviderProps) => {
     loadQuestions();
   }, []);
 
+  // Initialize current question's answer from savedAnswers when questions load
+  useEffect(() => {
+    if (questions.length > 0 && currentQuestionIndex < questions.length) {
+      const currentQuestion = questions[currentQuestionIndex];
+      if (currentQuestion && savedAnswers[currentQuestion.id] !== undefined && answers[currentQuestion.id] === undefined) {
+        setAnswers((prev) => ({
+          ...prev,
+          [currentQuestion.id]: savedAnswers[currentQuestion.id]
+        }));
+      }
+    }
+  }, [questions.length, currentQuestionIndex]); // Only run when questions load or index changes
+
   // Timer countdown
   useEffect(() => {
     if (timeRemaining <= 0) return;
@@ -56,13 +70,10 @@ export const MCQProvider = ({ children }: MCQProviderProps) => {
   }, [timeRemaining]);
 
   const selectAnswer = useCallback((questionId: number, answerIndex: number) => {
+    // Only update the selected answer, don't automatically save or change status
     setAnswers((prev) => ({
       ...prev,
       [questionId]: answerIndex
-    }));
-    setQuestionStatuses((prev) => ({
-      ...prev,
-      [questionId]: QUESTION_STATUS.ANSWERED
     }));
   }, []);
 
@@ -75,6 +86,11 @@ export const MCQProvider = ({ children }: MCQProviderProps) => {
 
   const saveAnswer = useCallback((questionId: number) => {
     if (answers[questionId] !== undefined) {
+      // Save the answer
+      setSavedAnswers((prev) => ({
+        ...prev,
+        [questionId]: answers[questionId]
+      }));
       setQuestionStatuses((prev) => ({
         ...prev,
         [questionId]: QUESTION_STATUS.ANSWERED
@@ -85,20 +101,46 @@ export const MCQProvider = ({ children }: MCQProviderProps) => {
   const goToQuestion = useCallback((index: number) => {
     if (index >= 0 && index < questions.length) {
       setCurrentQuestionIndex(index);
+      // Initialize selected answer from saved answer if available
+      const question = questions[index];
+      if (question && savedAnswers[question.id] !== undefined && answers[question.id] === undefined) {
+        setAnswers((prev) => ({
+          ...prev,
+          [question.id]: savedAnswers[question.id]
+        }));
+      }
     }
-  }, [questions.length]);
+  }, [questions, savedAnswers, answers]);
 
   const goToNext = useCallback(() => {
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+      // Initialize selected answer from saved answer if available
+      const question = questions[nextIndex];
+      if (question && savedAnswers[question.id] !== undefined && answers[question.id] === undefined) {
+        setAnswers((prev) => ({
+          ...prev,
+          [question.id]: savedAnswers[question.id]
+        }));
+      }
     }
-  }, [currentQuestionIndex, questions.length]);
+  }, [currentQuestionIndex, questions, savedAnswers, answers]);
 
   const goToPrevious = useCallback(() => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex((prev) => prev - 1);
+      const prevIndex = currentQuestionIndex - 1;
+      setCurrentQuestionIndex(prevIndex);
+      // Initialize selected answer from saved answer if available
+      const question = questions[prevIndex];
+      if (question && savedAnswers[question.id] !== undefined && answers[question.id] === undefined) {
+        setAnswers((prev) => ({
+          ...prev,
+          [question.id]: savedAnswers[question.id]
+        }));
+      }
     }
-  }, [currentQuestionIndex]);
+  }, [currentQuestionIndex, questions, savedAnswers, answers]);
 
   const saveAndNext = useCallback(() => {
     const currentQuestion = questions[currentQuestionIndex];
@@ -107,6 +149,19 @@ export const MCQProvider = ({ children }: MCQProviderProps) => {
     }
     goToNext();
   }, [currentQuestionIndex, questions, answers, saveAnswer, goToNext]);
+
+  const goToNextOnly = useCallback(() => {
+    goToNext();
+  }, [goToNext]);
+
+  // Check if current question has unsaved changes
+  const hasUnsavedChanges = useCallback(() => {
+    const currentQuestion = questions[currentQuestionIndex];
+    if (!currentQuestion) return false;
+    const selected = answers[currentQuestion.id];
+    const saved = savedAnswers[currentQuestion.id];
+    return selected !== undefined && selected !== saved;
+  }, [currentQuestionIndex, questions, answers, savedAnswers]);
 
   const getStatusCounts = useCallback(() => {
     const counts: Record<string, number> = {
@@ -140,6 +195,7 @@ export const MCQProvider = ({ children }: MCQProviderProps) => {
     currentQuestionIndex,
     currentQuestion: questions[currentQuestionIndex],
     answers,
+    savedAnswers,
     questionStatuses,
     timeRemaining,
     isLoading,
@@ -150,6 +206,8 @@ export const MCQProvider = ({ children }: MCQProviderProps) => {
     goToNext,
     goToPrevious,
     saveAndNext,
+    goToNextOnly,
+    hasUnsavedChanges,
     getStatusCounts,
     getProgressPercentage,
     formatTime

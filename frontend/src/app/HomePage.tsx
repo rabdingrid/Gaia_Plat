@@ -1,13 +1,25 @@
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from './../context/AuthContext';
+import Header from '../components/Header';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-8">
-      <div className="max-w-4xl w-full bg-white rounded-2xl shadow-2xl p-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header */}
+      <Header showUserInfo={true} showLogout={true} user={user} onLogout={handleLogout} />
+
+      {/* Main Content */}
+      <div className="flex items-center justify-center p-8">
+        <div className="max-w-4xl w-full bg-white rounded-2xl shadow-2xl p-12">
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">Mock Assessment</h1>
+          <h1 className="text-5xl font-bold text-gray-900 mb-4">Test Assessment</h1>
           <p className="text-xl text-gray-600">Complete the tutorial for each section before starting the test</p>
         </div>
 
@@ -80,6 +92,7 @@ const HomePage = () => {
           <p className="text-sm text-gray-500">
             Complete all tutorials to understand the assessment format before starting
           </p>
+        </div>
         </div>
       </div>
     </div>

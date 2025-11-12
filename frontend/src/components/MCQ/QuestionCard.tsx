@@ -3,8 +3,8 @@ import OptionsList from './OptionsList';
 import { useMCQNavigation } from '../../hooks/useMCQNavigation';
 
 const QuestionCard = () => {
-  const { currentQuestion, markForReview, saveAnswer, currentQuestionIndex, questions } = useMCQ();
-  const { goToPrevious, saveAndNext, canGoPrevious } = useMCQNavigation();
+  const { currentQuestion, markForReview, currentQuestionIndex, questions, hasUnsavedChanges, saveAndNext, goToNextOnly } = useMCQ();
+  const { goToPrevious, canGoPrevious } = useMCQNavigation();
 
   if (!currentQuestion) return null;
 
@@ -12,9 +12,6 @@ const QuestionCard = () => {
     markForReview(currentQuestion.id);
   };
 
-  const handleSaveAnswer = () => {
-    saveAnswer(currentQuestion.id);
-  };
 
   return (
     <div className="w-full max-w-full flex flex-col gap-6">
@@ -33,26 +30,7 @@ const QuestionCard = () => {
       
       <OptionsList />
       
-      <div className="flex justify-start gap-4 mt-4 w-full">
-        <div className="flex gap-4">
-          <button 
-            className="flex items-center gap-2 px-6 py-3 bg-transparent border-2 border-gray-200 rounded-lg text-base font-medium cursor-pointer transition-all hover:border-gray-400 hover:bg-gray-50 text-gray-800" 
-            onClick={handleMarkForReview}
-          >
-            <span className="text-base">🚩</span>
-            Mark for Review
-          </button>
-          <button 
-            className="flex items-center gap-2 px-6 py-3 bg-transparent border-2 border-gray-200 rounded-lg text-base font-medium cursor-pointer transition-all hover:border-gray-400 hover:bg-gray-50 text-gray-800" 
-            onClick={handleSaveAnswer}
-          >
-            <span className="text-base">💾</span>
-            Save Answer
-          </button>
-        </div>
-      </div>
-      
-      <div className="flex justify-between items-center px-8 py-2 bg-white border-t border-gray-200 mt-8 shadow-[0_-2px_8px_rgba(0,0,0,0.05)] w-full">
+      <div className="flex justify-between items-center gap-4 mt-6 w-full">
         <button
           className={`px-8 py-3 rounded-lg text-base font-medium cursor-pointer transition-all ${
             !canGoPrevious 
@@ -64,12 +42,31 @@ const QuestionCard = () => {
         >
           Previous
         </button>
-        <button 
-          className="px-8 py-3 bg-gray-900 text-white rounded-lg text-base font-semibold cursor-pointer transition-colors hover:bg-gray-800" 
-          onClick={saveAndNext}
-        >
-          Save & Next
-        </button>
+        
+        <div className="flex items-center gap-4">
+          <button 
+            className="flex items-center gap-2 px-6 py-3 bg-transparent border-2 border-gray-200 rounded-lg text-base font-medium cursor-pointer transition-all hover:border-gray-400 hover:bg-gray-50 text-gray-800" 
+            onClick={handleMarkForReview}
+          >
+            Mark for Review
+          </button>
+          
+          {hasUnsavedChanges() ? (
+            <button 
+              className="px-8 py-3 bg-gray-900 text-white rounded-lg text-base font-semibold cursor-pointer transition-colors hover:bg-gray-800" 
+              onClick={saveAndNext}
+            >
+              Save & Next
+            </button>
+          ) : (
+            <button 
+              className="px-8 py-3 bg-gray-900 text-white rounded-lg text-base font-semibold cursor-pointer transition-colors hover:bg-gray-800" 
+              onClick={goToNextOnly}
+            >
+              Next
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

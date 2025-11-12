@@ -11,40 +11,30 @@ interface AuthContextWithSetAuthState {
  * Determine redirect path based on user type and status
  */
 const getRedirectPath = (userType?: UserType, status?: CandidateStatus): string => {
+  console.log('getRedirectPath called with:', { userType, status });
+  
   // Admin users -> /admin
   if (userType === 'admin') {
+    console.log('Redirecting admin to /admin');
     return '/admin';
   }
   
   // Recruiter users -> /recruiter
   if (userType === 'recruiter') {
+    console.log('Redirecting recruiter to /recruiter');
     return '/recruiter';
   }
   
-  // Candidate users -> route based on status
+  // For now, redirect all candidates to /test/scheduled
+  // Candidate users -> /test/scheduled
   if (userType === 'candidate') {
-    switch (status) {
-      case 'registered':
-        // Registered but not scheduled yet
-        return '/home';
-      case 'scheduled':
-        // Scheduled for test - show test landing page
-        return '/home';
-      case 'ongoing':
-        // Test in progress - redirect to appropriate test section
-        // You can customize this based on which test they're taking
-        return '/home';
-      case 'done':
-        // Test completed - show thank you page or results
-        return '/home';
-      default:
-        // Default fallback
-        return '/home';
-    }
+    console.log('Redirecting candidate to /test/scheduled');
+    return '/test/scheduled';
   }
   
-  // Default fallback for any other case
-  return '/home';
+  // Default fallback - redirect to /test/scheduled
+  console.log('No matching user type, defaulting to /test/scheduled. userType was:', userType);
+  return '/test/scheduled';
 };
 
 const CallbackPage = () => {
@@ -87,6 +77,8 @@ const CallbackPage = () => {
             const authResponse: AuthResponse = JSON.parse(authJson);
             
             console.log('Auth response:', authResponse);
+            console.log('User type from response:', authResponse.user_type);
+            console.log('Status from response:', authResponse.status);
             
             // Set auth state
             if (authContext.setAuthState) {
@@ -96,7 +88,8 @@ const CallbackPage = () => {
             // Redirect based on user type after successful login
             if (authResponse.success) {
               const redirectPath = getRedirectPath(authResponse.user_type, authResponse.status);
-              console.log('Authentication successful, redirecting to:', redirectPath);
+              console.log('Calculated redirect path:', redirectPath);
+              console.log('User type used for redirect:', authResponse.user_type);
               // Use window.location for immediate redirect
               window.location.href = redirectPath;
             } else {

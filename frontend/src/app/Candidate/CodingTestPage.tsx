@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CodingProvider, useCoding } from '../../context/CodingContext';
 import LanguageTabs from '../../components/CodeEditor/LanguageTabs';
 import EditorHeader from '../../components/CodeEditor/EditorHeader';
@@ -6,12 +7,24 @@ import CodeEditor from '../../components/CodeEditor/CodeEditor';
 import TestCaseViewer from '../../components/CodeEditor/TestCaseViewer';
 import OutputViewer from '../../components/CodeEditor/OutputViewer';
 import { useCodingSession } from '../../hooks/useCodingSession';
+import { useFullscreenWarning } from '../../hooks/useFullscreenWarning';
+import FullscreenWarningModal from '../../components/FullscreenWarningModal';
+import FullscreenViolationModal from '../../components/FullscreenViolationModal';
 
 const CodingTestPageContent = () => {
   const { formatTime, timeRemaining, getProgressPercentage, isLoading, currentProblem } = useCoding();
   const { goToProblem, currentProblemIndex, totalProblems } = useCodingSession();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'testcases' | 'output'>('testcases');
   const [_showSubmitModal, setShowSubmitModal] = useState(false);
+
+  // Monitor fullscreen exit with warning system
+  const { attemptsRemaining, showWarning, showViolation, closeWarning, handleRedirect } = useFullscreenWarning({
+    maxAttempts: 2,
+    onFinalAttempt: () => {
+      // This will be called on the 3rd attempt (final)
+    },
+  });
 
   if (isLoading) {
     return (
@@ -198,6 +211,19 @@ const CodingTestPageContent = () => {
           </div>
         </main>
       </div>
+
+      {/* Fullscreen Warning Modal */}
+      <FullscreenWarningModal
+        isOpen={showWarning}
+        attemptsRemaining={attemptsRemaining}
+        onClose={closeWarning}
+      />
+
+      {/* Fullscreen Violation Modal */}
+      <FullscreenViolationModal
+        isOpen={showViolation}
+        onRedirect={handleRedirect}
+      />
     </div>
   );
 };
